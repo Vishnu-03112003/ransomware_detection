@@ -69,8 +69,8 @@
   </div>
 
   <script>
-    // ✅ Deployed backend URL
-    const backend = "https://ransomware-backend.onrender.com";
+    // ✅ Use your deployed Flask backend URL
+    const backend = "https://ransomware-detection-2.onrender.com";
 
     // ---------- FILE SCAN ----------
     async function scanFile() {
@@ -81,7 +81,7 @@
       formData.append('file', f);
 
       try {
-        const res = await fetch(`${backend}/predict`, {
+        const res = await fetch(`${backend}/api/scan_file`, {
           method: "POST",
           body: formData
         });
