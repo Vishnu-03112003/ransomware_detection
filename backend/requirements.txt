@@ -1,6 +1,7 @@
 flask
 gunicorn
 pandas
+flask-cors
 scikit-learn
 joblib
 pymongo
