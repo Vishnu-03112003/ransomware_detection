@@ -1,37 +1,41 @@
 from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
 import os, joblib, pandas as pd, datetime
 from pathlib import Path
-from features import get_extension, sample_non_printable_pct, pseudo_entropy_from_bytes, file_size_kb
 from pymongo import MongoClient
+from features import get_extension, sample_non_printable_pct, pseudo_entropy_from_bytes, file_size_kb
 
-# === Paths ===
+# === Setup ===
+app = Flask(__name__, static_folder="frontend")
+CORS(app)  # ✅ Enables CORS for frontend
+
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / 'model.joblib'
 
-# === Flask app ===
-app = Flask(__name__, static_folder=str(BASE_DIR / 'frontend'))
-model_data = None
+# === Load Model ===
 model = None
 model_columns = []
-
-# === Load model ===
 if MODEL_PATH.exists():
     model_data = joblib.load(str(MODEL_PATH))
     model = model_data['model']
     model_columns = model_data['columns']
+else:
+    print("⚠️ Warning: model.joblib not found, using dummy mode")
 
-# === MongoDB (optional) ===
-MONGO_URI = os.environ.get(MONGO_URI = os.environ.get(
+# === MongoDB Setup ===
+MONGO_URI = os.environ.get(
     'MONGO_URI',
-    'mongodb+srv://rengasankar2005:<Ganeshaa@2005>@cluster0.jmfr98r.mongodb.net/?retryWrites=true&w=majority')
+    'mongodb+srv://rengasankar2005:<db_password>@cluster0.jmfr98r.mongodb.net/?retryWrites=true&w=majority'
+)
 try:
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=2000)
     client.server_info()
     db = client['ransomware_demo']
     logs = db['detections']
     mongo_ok = True
+    print("✅ MongoDB connected")
 except Exception as e:
-    print('Mongo failed:', e)
+    print("❌ Mongo failed:", e)
     mongo_ok = False
     logs = None
 
@@ -71,13 +75,13 @@ def predict(feats):
 
 # === Routes ===
 @app.route('/')
-def index():
-    return send_from_directory(str(BASE_DIR / 'frontend'), 'index.html')
+def home():
+    return "✅ Ransomware Detection Backend Running"
 
 @app.route('/api/scan_file', methods=['POST'])
 def scan_file():
     if 'file' not in request.files:
-        return jsonify({'error': 'file required'}), 400
+        return jsonify({'error': 'No file uploaded'}), 400
     f = request.files['file']
     tmp = BASE_DIR / 'tmp'
     tmp.mkdir(exist_ok=True)
@@ -98,10 +102,10 @@ def scan_folder():
     data = request.get_json()
     folder = data.get('folder')
     if not folder:
-        return jsonify({'error': 'folder required'}), 400
+        return jsonify({'error': 'Folder required'}), 400
     p = Path(folder)
     if not p.exists() or not p.is_dir():
-        return jsonify({'error': 'folder not found'}), 400
+        return jsonify({'error': 'Folder not found'}), 400
     results = []
     for f in p.iterdir():
         if f.is_file():
@@ -110,7 +114,7 @@ def scan_folder():
             results.append({'file': str(f), **res})
     return jsonify({'results': results})
 
-# === Main ===
+# === Run App ===
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # ✅ Let Render assign the port
+    port = int(os.environ.get('PORT', 5000))  # Let Render assign port
     app.run(host='0.0.0.0', port=port)
