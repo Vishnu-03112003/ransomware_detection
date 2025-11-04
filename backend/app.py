@@ -53,4 +53,4 @@ def scan_folder():
     for f in p.iterdir():
         if f.is_file(): feats=compute_features(f); res=predict(feats); results.append({'file':str(f),**res})
     return jsonify({'results':results})
-if __name__=='__main__': app.run(host='0.0.0.0', port=10000 #port=5000,debug=True
+if __name__=='__main__': app.run(host='0.0.0.0', port=10000) #port=5000,debug=True
