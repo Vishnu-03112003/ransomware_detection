@@ -4,59 +4,116 @@
   <meta charset="utf-8">
   <title>Ransomware Detector</title>
   <style>
-    body { font-family: Arial; padding: 20px; }
-    .box { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 6px; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .box {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    input[type="text"], input[type="file"] {
+      margin-right: 10px;
+      padding: 6px;
+      border-radius: 5px;
+      border: 1px solid #aaa;
+    }
+    pre {
+      background: #f1f1f1;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
   </style>
 </head>
 
 <body>
-  <h1>Ransomware Detection (Flask UI)</h1>
+  <h1>🛡️ Ransomware Detection (Flask UI)</h1>
 
+  <!-- File Scan -->
   <div class="box">
-    <h3>Scan File</h3>
+    <h3>🔍 Scan File</h3>
     <input type="file" id="file">
     <button onclick="scanFile()">Scan</button>
     <pre id="out1"></pre>
   </div>
 
+  <!-- Folder Scan -->
   <div class="box">
-    <h3>Scan Folder</h3>
+    <h3>📂 Scan Folder</h3>
     <input type="text" id="folder" placeholder="C:\\Users\\You\\sample_testfiles">
     <button onclick="scanFolder()">Scan</button>
     <pre id="out2"></pre>
   </div>
 
   <script>
-    const backend = "https://ransomware-detection.onrender.com"; // ✅ your deployed backend URL
+    // ✅ Deployed backend URL
+    const backend = "https://ransomware-backend.onrender.com";
 
+    // ---------- FILE SCAN ----------
     async function scanFile() {
-      let f = document.getElementById('file').files[0];
-      if (!f) return alert('Please choose a file.');
+      const f = document.getElementById('file').files[0];
+      if (!f) return alert('Please choose a file to scan.');
 
-      let fd = new FormData();
-      fd.append('file', f);
+      const formData = new FormData();
+      formData.append('file', f);
 
-      let r = await fetch(`${backend}/api/scan_file`, {
-        method: 'POST',
-        body: fd
-      });
+      try {
+        const res = await fetch(`${backend}/predict`, {
+          method: "POST",
+          body: formData
+        });
 
-      let d = await r.json();
-      document.getElementById('out1').textContent = JSON.stringify(d, null, 2);
+        if (!res.ok) throw new Error("Network response was not OK");
+
+        const data = await res.json();
+        document.getElementById('out1').textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById('out1').textContent = "Error: " + err.message;
+      }
     }
 
+    // ---------- FOLDER SCAN ----------
     async function scanFolder() {
-      let p = document.getElementById('folder').value;
-      if (!p) return alert('Enter a folder path.');
+      const path = document.getElementById('folder').value.trim();
+      if (!path) return alert('Enter a valid folder path.');
 
-      let r = await fetch(`${backend}/api/scan_folder`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ folder: p })
-      });
+      try {
+        const res = await fetch(`${backend}/api/scan_folder`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ folder: path })
+        });
 
-      let d = await r.json();
-      document.getElementById('out2').textContent = JSON.stringify(d, null, 2);
+        if (!res.ok) throw new Error("Network response was not OK");
+
+        const data = await res.json();
+        document.getElementById('out2').textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById('out2').textContent = "Error: " + err.message;
+      }
     }
   </script>
 </body>
