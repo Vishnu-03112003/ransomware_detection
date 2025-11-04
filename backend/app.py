@@ -21,18 +21,19 @@ if MODEL_PATH.exists():
     model_columns = model_data['columns']
 
 # === MongoDB (optional) ===
-MONGO_URI = os.environ.get('MONGO_URI')
-mongo_ok = False
-logs = None
-if MONGO_URI:
-    try:
-        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=2000)
-        client.server_info()
-        db = client['ransomware_demo']
-        logs = db['detections']
-        mongo_ok = True
-    except Exception as e:
-        print('Mongo failed:', e)
+MONGO_URI = os.environ.get(MONGO_URI = os.environ.get(
+    'MONGO_URI',
+    'mongodb+srv://rengasankar2005:<Ganeshaa@2005>@cluster0.jmfr98r.mongodb.net/?retryWrites=true&w=majority')
+try:
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=2000)
+    client.server_info()
+    db = client['ransomware_demo']
+    logs = db['detections']
+    mongo_ok = True
+except Exception as e:
+    print('Mongo failed:', e)
+    mongo_ok = False
+    logs = None
 
 # === Helper Functions ===
 def compute_features(p: Path):
